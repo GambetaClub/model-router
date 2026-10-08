@@ -35,7 +35,7 @@ Add this to `~/.claude/settings.json` (user settings, not project settings):
 {
   "pluginConfigs": {
     "model-router@skills-dir": {
-      "options": { "typesafeApiKey": "…", "routeMainModel": true, "timeoutMs": 2000 }
+      "options": { "typesafeApiKey": "…", "timeoutMs": 2000 }
     }
   }
 }
@@ -64,7 +64,7 @@ jq -r 'select(.type=="assistant") | .message.model' ~/.claude/projects/<project>
 |---|---|---|
 | `typesafeApiKey` / `gatewayApiKey` | none | Jev through TypeSafe (preferred, gives confidence) or the Vercel AI Gateway |
 | `fastModel`, `balancedModel`, `deepModel`, `superDeepModel` | `haiku`, `sonnet`, `opus`, `fable` | Alias or full model id per tier |
-| `routeMainModel` | `false` | Pick the main chat's model |
+| `routeMainModel` | `true` | Pick the main chat's model from its first prompt |
 | `routeMainEffort` | `true` | Pick the main chat's effort |
 | `routeSubagentModel` | `true` | Pick each subagent's model |
 | `minUpgradeConfidence` / `minDowngradeConfidence` | `0.3` / `0.6` | How sure Jev must be to move up or down |

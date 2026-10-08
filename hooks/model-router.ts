@@ -100,7 +100,7 @@ export const register: Register = (on, options) => {
   const timeoutMs = number('timeoutMs', 800)
   const routeSubagentModel = flag('routeSubagentModel', true)
   const routeMainEffort = flag('routeMainEffort', true)
-  const routeMainModel = flag('routeMainModel', false)
+  const routeMainModel = flag('routeMainModel', true)
   const routeMainLoop = routeMainEffort || routeMainModel
   const logDecisions = flag('logDecisions', true)
 

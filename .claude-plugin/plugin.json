@@ -116,8 +116,8 @@
     "routeMainModel": {
       "type": "boolean",
       "title": "Route the main loop's model",
-      "description": "Change the model of the main conversation; off by default because switching models mid-session invalidates the prompt cache",
-      "default": false
+      "description": "Pick the main conversation's model from its first prompt, then keep it until /clear or a compaction",
+      "default": true
     },
     "timeoutMs": {
       "type": "number",
