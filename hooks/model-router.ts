@@ -133,12 +133,14 @@ export const register: Register = (on, options) => {
   // This session's prompts, so Jev can tell a new task from the current one.
   let earlier: string[] = []
   let held: string | undefined
+  let stopNextTurn = false
 
   on('session.end', ($, e, next) => {
     modelSettled = false
     sessionModel = undefined
     earlier = []
     held = undefined
+    stopNextTurn = false
     return next(e)
   })
   on('session.compact', ($, e, next) => {
@@ -245,12 +247,23 @@ export const register: Register = (on, options) => {
       for (const line of newSessionAdvice(e.text, decision.tier, policy.tiers[decision.tier])) {
         $.ui.log(`[Jev Model Router] ${line}`)
       }
-      return { drop: 'new task: start a new session' }
+      // Keep the prompt in the chat; turn.start cancels its turn before any reply.
+      stopNextTurn = true
+      return next(e)
     }
 
     earlier.push(e.text)
     pending.put(decision)
     return next(e)
+  })
+
+  on('turn.start', async ($, e, next) => {
+    const result = await next(e)
+    if (stopNextTurn) {
+      stopNextTurn = false
+      await $.turn.abort({ turnId: e.turnId })
+    }
+    return result
   })
 
   on('turn.step', async function* ($, e, next) {
