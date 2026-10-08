@@ -133,14 +133,14 @@ export const register: Register = (on, options) => {
   // This session's prompts, so Jev can tell a new task from the current one.
   let earlier: string[] = []
   let held: string | undefined
-  let stopNextTurn = false
+  let stopNextTurn: string[] | undefined
 
   on('session.end', ($, e, next) => {
     modelSettled = false
     sessionModel = undefined
     earlier = []
     held = undefined
-    stopNextTurn = false
+    stopNextTurn = undefined
     return next(e)
   })
   on('session.compact', ($, e, next) => {
@@ -244,11 +244,8 @@ export const register: Register = (on, options) => {
       decision.newTask >= NEW_TASK_THRESHOLD
     ) {
       held = e.text
-      for (const line of newSessionAdvice(e.text, decision.tier, policy.tiers[decision.tier])) {
-        $.ui.log(`[Jev Model Router] ${line}`)
-      }
-      // Keep the prompt in the chat; turn.start cancels its turn before any reply.
-      stopNextTurn = true
+      // Keep the prompt in the chat; turn.start shows this under it and cancels the turn.
+      stopNextTurn = newSessionAdvice(e.text, decision.tier, policy.tiers[decision.tier])
       return next(e)
     }
 
@@ -260,7 +257,11 @@ export const register: Register = (on, options) => {
   on('turn.start', async ($, e, next) => {
     const result = await next(e)
     if (stopNextTurn) {
-      stopNextTurn = false
+      const advice = stopNextTurn
+      stopNextTurn = undefined
+      for (const line of advice) $.ui.log(`[Jev Model Router] ${line}`)
+      $.ui.toast('Jev: new task. /clear and resend it, or send it again to run it here.', { timeoutMs: 15000 })
+      $.ui.status(advice[0])
       await $.turn.abort({ turnId: e.turnId })
     }
     return result
@@ -289,7 +290,7 @@ export const register: Register = (on, options) => {
     appliedTurnId = e.turnId
     applied = Object.keys(change).length > 0 ? change : null
     // A row in the transcript scrolls away; this line stays on screen.
-    if (logDecisions) $.ui.status(describeStatus(decision, applied, { model: e.model, effort: e.effort }))
+    if (logDecisions && decision) $.ui.status(describeStatus(decision, applied, { model: e.model, effort: e.effort }))
 
     if (!applied) {
       // A turn left alone is the common case, and it used to be silent, which
