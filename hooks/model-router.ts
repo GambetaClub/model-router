@@ -267,9 +267,11 @@ export const register: Register = (on, options) => {
     const change: { model?: string; effort?: Effort } = {}
     // The main loop's `model` is sent to the API as written, so an alias
     // becomes its id here; a subagent's (agent.spawn) may stay an alias.
-    if (routeMainModel && routing.model && !modelSettled) sessionModel = requestModelId(routing.model)
+    // A mod loaded into a running chat must not switch it; only a near-empty chat picks a model.
+    const freshChat = e.messageCount <= 4
+    if (routeMainModel && routing.model && !modelSettled && freshChat) sessionModel = requestModelId(routing.model)
     if (routeMainModel && sessionModel && sessionModel !== e.model) change.model = sessionModel
-    const keptMidway = routeMainModel && routing.model && modelSettled
+    const keptMidway = routeMainModel && routing.model && (modelSettled || !freshChat)
     modelSettled = true
     if (routeMainEffort && routing.effort) change.effort = routing.effort
 
