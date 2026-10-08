@@ -281,7 +281,7 @@ export const register: Register = (on, options) => {
     // The main loop's `model` is sent to the API as written, so an alias
     // becomes its id here; a subagent's (agent.spawn) may stay an alias.
     // A mod loaded into a running chat must not switch it; only a near-empty chat picks a model.
-    const freshChat = e.messageCount <= 4
+    const freshChat = e.messageCount <= 20
     if (routeMainModel && routing.model && !modelSettled && freshChat) sessionModel = requestModelId(routing.model)
     if (routeMainModel && sessionModel && sessionModel !== e.model) change.model = sessionModel
     const keptMidway = routeMainModel && routing.model && (modelSettled || !freshChat)
@@ -303,7 +303,7 @@ export const register: Register = (on, options) => {
             : keptMidway
               ? ' (model kept mid-conversation)'
               : ''
-        $.ui.log(`[Jev Model Router] main loop: ${routing.reason}${suppressed}`)
+        $.ui.log(`[Jev Model Router] main loop: ${routing.reason}${suppressed} · ${e.messageCount} msgs`)
       }
       return yield* next(e)
     }
@@ -311,7 +311,7 @@ export const register: Register = (on, options) => {
       const what = [change.model, change.effort && `effort ${change.effort}`]
         .filter(Boolean)
         .join(', ')
-      $.ui.log(`[Jev Model Router] main loop → ${what}: ${routing.reason}`)
+      $.ui.log(`[Jev Model Router] main loop → ${what}: ${routing.reason}${keptMidway ? ' (model kept mid-conversation)' : ''} · ${e.messageCount} msgs`)
     }
     return yield* next({ ...e, ...change })
   })
