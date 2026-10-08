@@ -79,6 +79,9 @@ With a key set, your prompt goes to TypeSafe or Vercel, along with up to five ea
 
 ```sh
 claude plugin test .
+node eval/eval.ts
 ```
+
+`eval/eval.ts` checks the first-prompt pick and the no-switch rule: real Jev calls through the hook, plus an audit of your past sessions. It needs Node 22.6 or newer.
 
 MIT licensed.
