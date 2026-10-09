@@ -318,7 +318,7 @@ test('the slot recovers after an ambiguous round', () => {
 
 // A turn the router leaves alone still has to say so: a silent no-op and a mod
 // that never loaded look identical in the transcript otherwise.
-test('a no-change decision reports what it wanted and what it kept', () => {
+test('a no-change decision says in plain words why it stayed', () => {
   const decision: Decision = {
     tier: 'fast',
     confidence: 0.41,
@@ -329,7 +329,7 @@ test('a no-change decision reports what it wanted and what it kept', () => {
   const routing = route(decision, { model: 'sonnet', effort: 'medium' }, config)
   expect(routing.model).toBeNull()
   expect(routing.effort).toBeNull()
-  expect(routing.reason).toBe('kept sonnet/medium, wanted haiku/low (confidence 0.41)')
+  expect(routing.reason).toBe('stayed on sonnet/medium: too unsure to switch to haiku (41% sure)')
 })
 
 test('a no-change decision without a confidence says so rather than going quiet', () => {
@@ -341,7 +341,7 @@ test('a no-change decision without a confidence says so rather than going quiet'
     effortConfidence: null,
   }
   const routing = route(decision, { model: 'sonnet', effort: 'medium' }, config)
-  expect(routing.reason).toBe('kept sonnet/medium, wanted haiku/low (confidence n/d)')
+  expect(routing.reason).toBe('stayed on sonnet/medium: no confidence score, so no switch to haiku')
 })
 
 test('no classification at all is its own reason, not a no-change', () => {
