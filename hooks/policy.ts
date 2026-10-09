@@ -426,8 +426,18 @@ export function route(
     // is indistinguishable from one that never loaded.
     const wantedEffort = effortScore === null ? null : effortLevel(effortScore)
     const kept = `${current.model}${current.effort === undefined ? '' : `/${current.effort}`}`
-    const wanted = `${wantedModel}${wantedEffort ? `/${wantedEffort}` : ''}`
-    return { model: null, effort: null, reason: `kept ${kept}, wanted ${wanted} (${said})` }
+    const modelDiffers = Boolean(wantedModel) && wantedModel !== current.model
+    const effortDiffers = wantedEffort !== null && wantedEffort !== current.effort
+    if (!modelDiffers && !effortDiffers) {
+      return { model: null, effort: null, reason: `stayed on ${kept}: already the right fit` }
+    }
+    const target = modelDiffers ? wantedModel : `effort ${wantedEffort}`
+    const sure = modelDiffers ? decision.confidence : decision.effortConfidence
+    const why =
+      sure === null
+        ? `no confidence score, so no switch to ${target}`
+        : `too unsure to switch to ${target} (${Math.round(sure * 100)}% sure)`
+    return { model: null, effort: null, reason: `stayed on ${kept}: ${why}` }
   }
 
   return { model, effort, reason: forced ? `${tier}, forced by risk` : `${tier} (${said})` }
