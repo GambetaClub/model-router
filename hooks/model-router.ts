@@ -134,6 +134,24 @@ export const register: Register = (on, options) => {
   let earlier: string[] = []
   let held: string | undefined
   let stopNextTurn: string[] | undefined
+  let off = false
+  const statusText = (text?: string) => `Jev router ${off ? 'off' : 'on'}${text ? ` · ${text}` : ''}`
+
+  on('session.start', async ($, e, next) => {
+    off = (await $.store.get('off')) === true
+    $.ui.status(statusText())
+    await $.command.register({ name: 'router', description: 'Turn the Jev model router on or off: /router on|off' })
+    return next(e)
+  })
+  on('command.run', { command: 'router' }, async ($, e) => {
+    const arg = e.args.trim().toLowerCase()
+    if (arg === 'on' || arg === 'off') {
+      off = arg === 'off'
+      await $.store.set('off', off)
+      $.ui.status(statusText())
+    }
+    return { text: `Jev model router is ${off ? 'off' : 'on'}.` }
+  })
 
   on('session.end', ($, e, next) => {
     modelSettled = false
@@ -150,6 +168,7 @@ export const register: Register = (on, options) => {
   })
 
   on('prompt.submit', async ($, e, next) => {
+    if (off) return next(e)
     // Before the routing guards: a module whose switches are all off has still
     // loaded, and that is exactly when its silence is most misleading.
     if (!announced) {
@@ -261,14 +280,14 @@ export const register: Register = (on, options) => {
       stopNextTurn = undefined
       for (const line of advice) $.ui.log(`[Jev Model Router] ${line}`)
       $.ui.toast('Jev: new task. /clear and resend it, or send it again to run it here.', { timeoutMs: 15000 })
-      $.ui.status(advice[0])
+      $.ui.status(statusText(advice[0]))
       await $.turn.abort({ turnId: e.turnId })
     }
     return result
   })
 
   on('turn.step', async function* ($, e, next) {
-    if (!routeMainLoop || e.agentId) return yield* next(e)
+    if (off || !routeMainLoop || e.agentId) return yield* next(e)
 
     // Every request after the first reuses what the turn settled on, so
     // neither the model nor the effort changes under its own tool loop.
@@ -290,7 +309,7 @@ export const register: Register = (on, options) => {
     appliedTurnId = e.turnId
     applied = Object.keys(change).length > 0 ? change : null
     // A row in the transcript scrolls away; this line stays on screen.
-    if (logDecisions && decision) $.ui.status(describeStatus(decision, applied, { model: e.model, effort: e.effort }))
+    if (logDecisions && decision) $.ui.status(statusText(describeStatus(decision, applied, { model: e.model, effort: e.effort })))
 
     if (!applied) {
       // A turn left alone is the common case, and it used to be silent, which
@@ -316,6 +335,7 @@ export const register: Register = (on, options) => {
   })
 
   on('agent.spawn', async ($, e, next) => {
+    if (off) return next(e)
     // Before the routing guards: a module whose switches are all off has still
     // loaded, and that is exactly when its silence is most misleading.
     if (!announced) {
