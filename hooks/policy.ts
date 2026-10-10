@@ -56,7 +56,7 @@ export const TIER_ORDER: readonly Tier[] = ['fast', 'balanced', 'deep', 'superDe
  * shape of the work, not about model names: the model never sees an id.
  */
 const TIER_CRITERIA: Record<Tier, string> = {
-  fast: 'Mechanical and local: read or summarise a file, run one command, rename a symbol, answer something already in context.',
+  fast: 'Trivially dumb: no thinking needed at all. Run one command, print or read one file, answer a one-line factual question already in context. If in doubt, it is not this tier.',
   balanced:
     'Ordinary engineering: implement a well-specified change across a few files, write tests, fix a clearly described bug, review a small diff.',
   deep: 'Hard or high-stakes: architecture and design, debugging a failure whose cause is unknown, security, data migrations, concurrency, anything touching production or money.',
